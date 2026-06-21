@@ -1,0 +1,104 @@
+name: Publish to NuGet
+
+# Publishes the package to NuGet using Trusted Publishing (OIDC) — no long-lived
+# API key required. On manual runs it also tags the commit and creates a GitHub
+# Release with auto-generated notes once the push succeeds.
+#
+# Two ways to run:
+#   * Manually (workflow_dispatch): provide a version (e.g. 1.0.0). On a
+#     successful NuGet push, this creates tag "v<version>" and a GitHub Release
+#     with generated notes, attaching the .nupkg as a release asset.
+#   * On a published GitHub Release: the release tag is used as the version and
+#     the package is published. No new tag/release is created (it already exists).
+#
+# Prerequisites (one-time):
+#   1. On nuget.org -> your username -> Trusted Publishing, add a policy:
+#        Repository Owner: asadali214
+#        Repository:       checkout-sample-sdk
+#        Workflow File:    publish.yml
+#        Environment:      (leave empty)
+#   2. Add a repository secret NUGET_USER with your nuget.org username
+#      (profile name, NOT your email).
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Package version to publish (e.g. 1.0.0)"
+        required: true
+        default: "1.0.0"
+
+# contents: write -> create tags and releases
+# id-token: write -> request the GitHub OIDC token for Trusted Publishing
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          VERSION="${VERSION#v}"
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Publishing version $VERSION"
+
+      - name: Restore
+        run: dotnet restore PayPalServerSdk.csproj
+
+      - name: Pack
+        run: >
+          dotnet pack PayPalServerSdk.csproj
+          -c Release
+          -o ./artifacts
+          -p:Version=${{ steps.version.outputs.value }}
+
+      # Exchange the GitHub OIDC token for a short-lived nuget.org API key.
+      # Valid for ~1 hour, so this runs immediately before the push.
+      - name: NuGet login (OIDC -> temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet
+        run: >
+          dotnet nuget push "./artifacts/*.nupkg"
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
+
+      # Runs only for manual runs and only if every previous step succeeded
+      # (including the NuGet push). For release-triggered runs the tag/release
+      # already exist, so this is skipped to avoid creating a duplicate.
+      - name: Tag and create GitHub Release
+        if: ${{ success() && github.event_name == 'workflow_dispatch' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v${{ steps.version.outputs.value }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; skipping."
+          else
+            gh release create "$TAG" \
+              ./artifacts/*.nupkg \
+              --title "$TAG" \
+              --target "${{ github.sha }}" \
+              --generate-notes
+          fi

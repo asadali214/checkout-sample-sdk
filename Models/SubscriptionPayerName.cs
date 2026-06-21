@@ -1,0 +1,51 @@
+using System.Text.Json.Serialization;
+
+namespace PayPalServerSdk.Models;
+
+/// <summary>
+/// The name of the party.
+/// </summary>
+public record SubscriptionPayerName
+{
+    /// <summary>
+    /// The prefix, or title, to the party's name.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("prefix")]
+    public string? Prefix { get; init; }
+
+    /// <summary>
+    /// When the party is a person, the party's given, or first, name.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("given_name")]
+    public string? GivenName { get; init; }
+
+    /// <summary>
+    /// When the party is a person, the party's surname or family name. Also known as the last name. Required when the party is a person. Use also to store multiple surnames including the matronymic, or mother's, surname.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("surname")]
+    public string? Surname { get; init; }
+
+    /// <summary>
+    /// When the party is a person, the party's middle name. Use also to store multiple middle names including the patronymic, or father's, middle name.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("middle_name")]
+    public string? MiddleName { get; init; }
+
+    /// <summary>
+    /// The suffix for the party's name.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("suffix")]
+    public string? Suffix { get; init; }
+
+    /// <summary>
+    /// When the party is a person, the party's full name.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("full_name")]
+    public string? FullName { get; init; }
+}

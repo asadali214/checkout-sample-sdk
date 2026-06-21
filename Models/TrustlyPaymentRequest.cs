@@ -1,0 +1,34 @@
+using System.Text.Json.Serialization;
+
+namespace PayPalServerSdk.Models;
+
+/// <summary>
+/// Information needed to pay using Trustly.
+/// </summary>
+public record TrustlyPaymentRequest
+{
+    /// <summary>
+    /// The full name representation like Mr J Smith.
+    /// </summary>
+    [JsonPropertyName("name")]
+    public required string Name { get; init; }
+
+    /// <summary>
+    /// The <see href="/api/rest/reference/country-codes/">two-character ISO 3166-1 code</see> that identifies the country or region. Note: The country code for Great Britain is GB and not UK as used in the top-level domain names for that country. Use the <c>C2</c> country code for China worldwide for comparable uncontrolled price (CUP) method, bank card, and cross-border transactions.
+    /// </summary>
+    [JsonPropertyName("country_code")]
+    public required string CountryCode { get; init; }
+
+    /// <summary>
+    /// The internationalized email address. Note: Up to 64 characters are allowed before and 255 characters are allowed after the @ sign. However, the generally accepted maximum length for an email address is 254 characters. The pattern verifies that an unquoted @ sign exists.
+    /// </summary>
+    [JsonPropertyName("email")]
+    public required string Email { get; init; }
+
+    /// <summary>
+    /// Customizes the payer experience during the approval process for the payment.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("experience_context")]
+    public ExperienceContext? ExperienceContext { get; init; }
+}

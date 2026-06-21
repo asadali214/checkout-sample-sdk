@@ -1,0 +1,21 @@
+using System.Text.Json.Serialization;
+
+namespace PayPalServerSdk.Models;
+
+/// <summary>
+/// The tax details.
+/// </summary>
+public record Taxes
+{
+    /// <summary>
+    /// The percentage, as a fixed-point, signed decimal number. For example, define a 19.99% interest rate as <c>19.99</c>.
+    /// </summary>
+    [JsonPropertyName("percentage")]
+    public required string Percentage { get; init; }
+
+    /// <summary>
+    /// Indicates whether the tax was already included in the billing amount.
+    /// </summary>
+    [JsonPropertyName("inclusive")]
+    public bool? Inclusive { get; init; } = true;
+}

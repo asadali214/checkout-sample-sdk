@@ -1,0 +1,23 @@
+using System.Text.Json.Serialization;
+
+namespace PayPalServerSdk.Models;
+
+/// <summary>
+/// Representation of card details as received in the request.
+/// </summary>
+public record CardFromRequest
+{
+    /// <summary>
+    /// The year and month, in ISO-8601 <c>YYYY-MM</c> date format. See <see href="https://tools.ietf.org/html/rfc3339#section-5.6">Internet date and time format</see>.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("expiry")]
+    public string? Expiry { get; init; }
+
+    /// <summary>
+    /// The last digits of the payment card.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("last_digits")]
+    public string? LastDigits { get; init; }
+}
